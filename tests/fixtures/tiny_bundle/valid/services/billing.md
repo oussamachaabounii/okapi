@@ -1,10 +1,10 @@
 ---
-type: service
+type: Service
 title: Billing
 description: Handles invoice creation.
 tags: [billing]
 resource: src/billing.py
-updated: 2026-07-02
+timestamp: 2026-07-02T12:00:00Z
 ---
 
 # Billing

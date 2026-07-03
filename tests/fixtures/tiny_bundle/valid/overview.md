@@ -1,10 +1,10 @@
 ---
-type: system
+type: System
 title: Tiny Service
 description: A one-endpoint HTTP service used as a validator test fixture.
 tags: [http, fixture]
 resource: src/
-updated: 2026-07-02
+timestamp: 2026-07-02T12:00:00Z
 ---
 
 # Tiny Service

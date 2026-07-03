@@ -53,14 +53,29 @@ Format (OKF v0.1).
 
 ## OKF v0.1 rules (non-negotiable)
 
-- A bundle is a directory tree. Each **concept** is one markdown file.
+- A bundle is a directory tree. Each **concept** is one markdown file; the
+  file path is the concept's identity.
 - Every concept file starts with a YAML frontmatter block delimited by `---` lines.
-  The only *required* field is `type`. Always also emit {recommended}:
+  The only *required* field is `type` — a short human-readable Title Case
+  category (like "Module" or "Entry Point"). Always also emit {recommended}.
+  Example:
+
+```yaml
+---
+type: Data Model
+title: Orders
+description: One row per completed customer order.
+resource: src/models/order.py
+tags: [sales, revenue]
+timestamp: 2026-05-28T14:30:00Z
+---
+```
+
   - `title`: short human name
   - `description`: one-sentence summary
+  - `resource`: the repo-root-relative path of the source this concept documents
   - `tags`: list of lowercase keywords
-  - `resource`: the path (relative to the repo root) of the source this concept documents
-  - `updated`: today's date, ISO format (YYYY-MM-DD)
+  - `timestamp`: now, as an ISO 8601 datetime (e.g. 2026-05-28T14:30:00Z)
 - A concept's id is its file path minus `.md` (e.g. `services/billing.md` → `services/billing`).
   Use short kebab-case filenames.
 - `index.md` and `log.md` are **reserved** at every directory level — never use them
@@ -92,6 +107,20 @@ Unknown types are allowed when nothing above fits, but prefer the vocabulary.
   and in body prose. Never invent files, symbols, or behavior.
 - Body prose is for a competent engineer new to this repo: what it is, how it
   fits, where the sharp edges are. Short sections beat walls of text.
+- Structure bodies as scannable `#` sections, and prefer **markdown tables**
+  for anything enumerable — schemas, function signatures, CLI options, config
+  keys, routes — with links where a row relates to another concept, e.g.:
+
+```markdown
+# Schema
+| Column | Type | Description |
+|---|---|---|
+| `order_id` | STRING | Globally unique order identifier. |
+| `customer_id` | STRING | FK to [customers](customers.md). |
+
+# Joins
+Joined with [customers](customers.md) on `customer_id`.
+```
 - Write concept files as you finish understanding each area — don't hold
   everything for the end. Finish by writing `index.md` files for every
   directory and the root `log.md`.

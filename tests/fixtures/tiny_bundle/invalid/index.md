@@ -1,5 +1,5 @@
 ---
-type: system
+type: System
 title: Wrong — concept content in a reserved file
 ---
 

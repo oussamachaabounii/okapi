@@ -53,6 +53,18 @@ def test_reserved_log_md_without_frontmatter_is_fine():
     assert not any("log.md" in e for e in report.errors)
 
 
+def test_type_vocabulary_check_is_case_insensitive(tmp_path):
+    bundle = tmp_path / "bundle"
+    bundle.mkdir()
+    (bundle / "index.md").write_text("# ok\n")
+    (bundle / "thing.md").write_text(
+        "---\ntype: entry point\ntitle: t\ndescription: d\ntags: [x]\n"
+        "resource: src/x.py\ntimestamp: 2026-07-03T00:00:00Z\n---\n\n# t\n"
+    )
+    report = validate_bundle(bundle)
+    assert not any("vocabulary" in w for w in report.warnings)
+
+
 def test_unterminated_frontmatter_is_an_error(tmp_path):
     bundle = tmp_path / "bundle"
     bundle.mkdir()

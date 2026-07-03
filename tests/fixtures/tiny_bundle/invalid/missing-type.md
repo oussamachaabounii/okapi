@@ -3,7 +3,7 @@ title: No type field
 description: Frontmatter exists but the one required field is missing.
 tags: [fixture]
 resource: src/nowhere.py
-updated: 2026-07-02
+timestamp: 2026-07-02T12:00:00Z
 ---
 
 # Missing type

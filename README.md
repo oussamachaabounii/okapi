@@ -84,11 +84,15 @@ okf-knowledge/
     └── invoice-lifecycle.md
 ```
 
-Every concept file has YAML frontmatter (`type` is required; `title`,
-`description`, `tags`, `resource`, `updated` are always emitted — `resource`
-points back at the real source path). Relationships are plain markdown links
-in the body. After each run, `okapi analyze` automatically validates the
-bundle and prints a pass/fail summary.
+Every concept file has YAML frontmatter in the style of [Google's OKF
+examples](https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing):
+`type` is required (a Title Case category like `Module` or `Entry Point`);
+`title`, `description`, `tags`, `resource`, and `timestamp` (ISO 8601) are
+always emitted — `resource` points back at the real source path. Bodies are
+scannable sections that prefer markdown tables for anything enumerable
+(schemas, signatures, CLI options), and relationships are plain markdown
+links in the prose. After each run, `okapi analyze` automatically validates
+the bundle and prints a pass/fail summary.
 
 ## Extending
 

@@ -97,7 +97,8 @@ def validate_bundle(path: Path) -> ValidationReport:
             if required not in fm:
                 report.errors.append(f"{rel}: missing required field '{required}'")
 
-        if "type" in fm and fm["type"] not in okf_schema.CONCEPT_TYPES:
+        known_types = {t.lower() for t in okf_schema.CONCEPT_TYPES}
+        if "type" in fm and str(fm["type"]).lower() not in known_types:
             report.warnings.append(
                 f"{rel}: type '{fm['type']}' is not in the known vocabulary"
             )
