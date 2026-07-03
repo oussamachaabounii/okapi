@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "okapi"
-version = "0.1.0"
+version = "0.2.0"
 description = "Reverse-engineer a codebase into an Open Knowledge Format (OKF) bundle using the Claude Agent SDK"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -19,6 +19,10 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+
+[project.urls]
+Homepage = "https://github.com/oussamachaabounii/okapi"
+Issues = "https://github.com/oussamachaabounii/okapi/issues"
 
 [project.scripts]
 okapi = "okapi.cli:main"

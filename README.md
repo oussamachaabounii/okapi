@@ -6,17 +6,40 @@ to reverse-engineer the code — reading it, tracing entry points, services,
 data models, and workflows — and writes what it learns as a folder of markdown
 files conforming to Google's [Open Knowledge Format (OKF v0.1)](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md).
 
-## Install
+## Install (macOS / Windows / Linux)
 
-Requires Python 3.10+. From the repo root:
+okapi installs with [pipx](https://pipx.pypa.io) and is fully self-contained —
+the Agent SDK ships a bundled Claude Code runtime, so you don't need Node or a
+separate Claude Code install. Requires Python 3.10+.
+
+**macOS:**
 
 ```sh
-pipx install .          # isolated install, recommended
-# or
-pip install -e .        # editable install for development
+brew install pipx && pipx ensurepath
+pipx install git+https://github.com/oussamachaabounii/okapi
 ```
 
-Either one puts a real `okapi` command on your PATH.
+**Windows (PowerShell):**
+
+```powershell
+py -m pip install --user pipx
+py -m pipx ensurepath      # then reopen the terminal
+pipx install git+https://github.com/oussamachaabounii/okapi
+```
+
+Then from any folder:
+
+```sh
+okapi --version
+```
+
+**Upgrade / uninstall:** `pipx reinstall okapi` (pulls latest `main`) /
+`pipx uninstall okapi`. To pin a release, install a tag:
+`pipx install git+https://github.com/oussamachaabounii/okapi@v0.2.0` — tagged
+releases with prebuilt wheels are on the
+[Releases page](https://github.com/oussamachaabounii/okapi/releases).
+
+**For development** (from a clone): `pip install -e ".[dev]"`.
 
 ## Auth
 
