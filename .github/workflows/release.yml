@@ -8,7 +8,51 @@ permissions:
   contents: write
 
 jobs:
+  binaries:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            artifact: okapi-macos-arm64
+          - os: macos-13
+            artifact: okapi-macos-x64
+          - os: ubuntu-latest
+            artifact: okapi-linux-x64
+          - os: windows-latest
+            artifact: okapi-windows-x64.exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Build standalone binary
+        # The SDK's bundled Claude Code runtime (~220MB) is excluded — the
+        # standalone binary uses the locally installed Claude Code instead.
+        run: |
+          pip install . pyinstaller
+          pyinstaller --onefile --name okapi --copy-metadata okapi packaging/entry.py
+      - name: Smoke test binary
+        shell: bash
+        run: |
+          ./dist/okapi* --version
+          ./dist/okapi* validate tests/fixtures/tiny_bundle/valid
+      - name: Rename artifact
+        shell: bash
+        run: |
+          cd dist
+          for f in okapi okapi.exe; do
+            [ -f "$f" ] && mv "$f" "${{ matrix.artifact }}"
+          done
+          ls -lh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/${{ matrix.artifact }}
+
   release:
+    needs: binaries
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,20 +69,34 @@ jobs:
           fi
       - name: Build sdist and wheel
         run: pipx run build
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
           files: dist/*
           generate_release_notes: true
           body: |
-            Install or upgrade with pipx (macOS / Windows / Linux):
+            ## Standalone binaries (no Python required)
+
+            Download the one for your machine, make it executable, and put it
+            on your PATH. Requires [Claude Code](https://claude.com/claude-code)
+            installed and logged in (or `ANTHROPIC_API_KEY` set).
+
+            **macOS / Linux:**
+
+            ```
+            curl -fsSL https://raw.githubusercontent.com/oussamachaabounii/okapi/main/install.sh | sh
+            ```
+
+            **Windows (PowerShell):** download `okapi-windows-x64.exe` below,
+            rename it to `okapi.exe`, and drop it in a folder on your PATH.
+
+            ## Python install (alternative)
 
             ```
             pipx install git+https://github.com/oussamachaabounii/okapi@${{ github.ref_name }}
-            ```
-
-            or from the attached wheel:
-
-            ```
-            pip install <downloaded .whl>
             ```

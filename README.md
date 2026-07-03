@@ -6,25 +6,27 @@ to reverse-engineer the code — reading it, tracing entry points, services,
 data models, and workflows — and writes what it learns as a folder of markdown
 files conforming to Google's [Open Knowledge Format (OKF v0.1)](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md).
 
-## Install (macOS / Windows / Linux)
+## Install
 
-okapi installs with [pipx](https://pipx.pypa.io) and is fully self-contained —
-the Agent SDK ships a bundled Claude Code runtime, so you don't need Node or a
-separate Claude Code install. Requires Python 3.10+.
+### Standalone binary — no Python required (recommended)
 
-**macOS:**
+Single-file executables for macOS (Apple Silicon + Intel), Windows, and Linux
+are attached to every [release](https://github.com/oussamachaabounii/okapi/releases).
+They need [Claude Code](https://claude.com/claude-code) installed and logged
+in on the machine (or `ANTHROPIC_API_KEY` set) — that's it.
+
+**macOS / Linux:**
 
 ```sh
-brew install pipx && pipx ensurepath
-pipx install git+https://github.com/oussamachaabounii/okapi
+curl -fsSL https://raw.githubusercontent.com/oussamachaabounii/okapi/main/install.sh | sh
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-py -m pip install --user pipx
-py -m pipx ensurepath      # then reopen the terminal
-pipx install git+https://github.com/oussamachaabounii/okapi
+mkdir -Force "$env:LOCALAPPDATA\okapi" | Out-Null
+irm https://github.com/oussamachaabounii/okapi/releases/latest/download/okapi-windows-x64.exe -OutFile "$env:LOCALAPPDATA\okapi\okapi.exe"
+# then add $env:LOCALAPPDATA\okapi to your PATH
 ```
 
 Then from any folder:
@@ -33,11 +35,18 @@ Then from any folder:
 okapi --version
 ```
 
-**Upgrade / uninstall:** `pipx reinstall okapi` (pulls latest `main`) /
-`pipx uninstall okapi`. To pin a release, install a tag:
-`pipx install git+https://github.com/oussamachaabounii/okapi@v0.2.0` — tagged
-releases with prebuilt wheels are on the
-[Releases page](https://github.com/oussamachaabounii/okapi/releases).
+**Upgrade:** re-run the installer (it always fetches the latest release).
+
+### Python install (alternative)
+
+With Python 3.10+ and [pipx](https://pipx.pypa.io) — this route is fully
+self-contained (the Agent SDK ships a bundled Claude Code runtime, so not
+even Claude Code is needed, only a login or API key):
+
+```sh
+pipx install git+https://github.com/oussamachaabounii/okapi          # latest
+pipx install git+https://github.com/oussamachaabounii/okapi@v0.3.0   # pinned
+```
 
 **For development** (from a clone): `pip install -e ".[dev]"`.
 
