@@ -72,7 +72,10 @@ and fails fast with setup guidance if it finds neither.
 ## Usage
 
 ```sh
-# Analyze a whole repo — writes <repo>/okf-knowledge/
+# From inside a repo: analyze it — writes ./okf-knowledge/
+cd ~/code/my-service && okapi analyze
+
+# Or point it at a path explicitly
 okapi analyze ~/code/my-service
 
 # A single file (the bundle still lands at the repo root)
@@ -88,11 +91,14 @@ okapi analyze ~/code/my-service --depth deep
 okapi analyze ~/code/my-service --model opus
 okapi analyze ~/code/my-service --model claude-sonnet-4-6
 
-# Check an existing (possibly hand-edited) bundle
-okapi validate ~/code/my-service/okf-knowledge
+# Check a bundle (defaults to ./okf-knowledge)
+okapi validate
 
-# Explore a bundle visually — interactive knowledge graph in your browser
-okapi visualize ~/code/my-service/okf-knowledge --open
+# Explore it visually — interactive knowledge graph in your browser
+okapi visualize --open
+
+# Update okapi itself to the latest release
+okapi update
 ```
 
 Options for `analyze`: `-o/--output` (default `<repo_root>/okf-knowledge` — must

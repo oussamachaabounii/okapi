@@ -46,7 +46,7 @@ def main() -> None:
 
 
 @main.command()
-@click.argument("target", type=click.Path(exists=True, path_type=Path))
+@click.argument("target", type=click.Path(exists=True, path_type=Path), default=".")
 @click.option(
     "-o", "--output", "output_dir", type=click.Path(path_type=Path), default=None,
     help="Bundle directory [default: <repo_root>/okf-knowledge].",
@@ -77,7 +77,11 @@ def analyze(
     include_tests: bool,
     model: str,
 ) -> None:
-    """Analyze TARGET (repo, directory, or file) and write an OKF bundle."""
+    """Analyze TARGET (repo, directory, or file) and write an OKF bundle.
+
+    TARGET defaults to the current directory — `okapi analyze` run inside
+    a repo documents that repo.
+    """
     try:
         auth = detect_auth()
     except RuntimeError as exc:
@@ -121,9 +125,13 @@ def analyze(
 
 
 @main.command()
-@click.argument("bundle_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.argument(
+    "bundle_dir",
+    type=click.Path(exists=True, file_okay=False, path_type=Path),
+    default="okf-knowledge",
+)
 def validate(bundle_dir: Path) -> None:
-    """Check an existing OKF bundle for conformance."""
+    """Check an OKF bundle for conformance [default: ./okf-knowledge]."""
     report = validate_bundle(bundle_dir)
     _render_report(report, bundle_dir)
     if not report.ok:
@@ -131,14 +139,19 @@ def validate(bundle_dir: Path) -> None:
 
 
 @main.command()
-@click.argument("bundle_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.argument(
+    "bundle_dir",
+    type=click.Path(exists=True, file_okay=False, path_type=Path),
+    default="okf-knowledge",
+)
 @click.option(
     "-o", "--output", "output_file", type=click.Path(path_type=Path), default=None,
     help="Where to write the HTML [default: <bundle>/okf-viewer.html].",
 )
 @click.option("--open", "open_browser", is_flag=True, help="Open the page in your browser.")
 def visualize(bundle_dir: Path, output_file: Path | None, open_browser: bool) -> None:
-    """Render BUNDLE_DIR as an interactive knowledge-graph HTML page."""
+    """Render an OKF bundle as an interactive knowledge-graph HTML page
+    [default: ./okf-knowledge]."""
     from .visualizer import build_visualization
 
     try:
