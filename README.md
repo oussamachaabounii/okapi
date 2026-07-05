@@ -45,7 +45,7 @@ even Claude Code is needed, only a login or API key):
 
 ```sh
 pipx install git+https://github.com/oussamachaabounii/okapi          # latest
-pipx install git+https://github.com/oussamachaabounii/okapi@v0.4.0   # pinned
+pipx install git+https://github.com/oussamachaabounii/okapi@v0.4.1   # pinned
 ```
 
 **For development** (from a clone): `pip install -e ".[dev]"`.

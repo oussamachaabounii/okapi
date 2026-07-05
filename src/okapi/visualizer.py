@@ -154,9 +154,15 @@ _TEMPLATE = r"""<!doctype html>
     font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     color: var(--ink); background: var(--bg);
     display: grid; grid-template-rows: 52px 1fr;
-    grid-template-columns: 270px 1fr minmax(340px, 430px);
-    grid-template-areas: "head head head" "side graph detail";
+    grid-template-columns: var(--side-w, 270px) 6px minmax(0, 1fr) 6px var(--detail-w, 420px);
+    grid-template-areas: "head head head head head" "side gut1 graph gut2 detail";
   }
+  .gutter {
+    background: var(--line); cursor: col-resize; user-select: none;
+    transition: background 0.15s;
+  }
+  .gutter:hover, .gutter.active { background: var(--accent); }
+  #gut1 { grid-area: gut1; } #gut2 { grid-area: gut2; }
   header {
     grid-area: head; display: flex; align-items: center; gap: 18px;
     padding: 0 18px; background: var(--panel); border-bottom: 1px solid var(--line);
@@ -167,7 +173,7 @@ _TEMPLATE = r"""<!doctype html>
   .stats b { color: var(--ink); font-weight: 600; }
   #sidebar {
     grid-area: side; background: var(--panel); border-right: 1px solid var(--line);
-    display: flex; flex-direction: column; min-height: 0;
+    display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden;
   }
   #search {
     margin: 12px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px;
@@ -200,11 +206,18 @@ _TEMPLATE = r"""<!doctype html>
     position: absolute; left: 12px; bottom: 10px; font-size: 11.5px; color: var(--muted);
     background: color-mix(in srgb, var(--canvas) 75%, transparent); padding: 2px 8px; border-radius: 6px;
   }
-  #detail {
-    grid-area: detail; background: var(--panel); border-left: 1px solid var(--line);
-    overflow-y: auto; padding: 20px 22px; min-height: 0;
+  #detail-wrap {
+    grid-area: detail; background: var(--panel); position: relative;
+    display: flex; flex-direction: column; min-height: 0; min-width: 0;
   }
-  #detail h2 { margin: 0 0 2px; font-size: 19px; }
+  #detail { overflow-y: auto; padding: 20px 22px; flex: 1; }
+  #expand {
+    position: absolute; top: 10px; right: 14px; z-index: 2;
+    border: 1px solid var(--line); background: var(--panel); color: var(--muted);
+    border-radius: 7px; width: 30px; height: 28px; cursor: pointer; font-size: 14px;
+  }
+  #expand:hover { color: var(--ink); border-color: var(--accent); }
+  #detail h2 { margin: 0 0 2px; font-size: 19px; padding-right: 34px; }
   .badge {
     display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11.5px;
     font-weight: 600; color: #fff; margin: 6px 0 2px;
@@ -245,12 +258,19 @@ _TEMPLATE = r"""<!doctype html>
   <div id="list"></div>
 </div>
 
+<div id="gut1" class="gutter" title="drag to resize · double-click to reset"></div>
+
 <div id="graph-wrap">
   <canvas id="graph"></canvas>
   <div id="hint">scroll to zoom · drag background to pan · drag nodes · click to inspect</div>
 </div>
 
-<div id="detail"></div>
+<div id="gut2" class="gutter" title="drag to resize · double-click to reset"></div>
+
+<div id="detail-wrap">
+  <button id="expand" title="toggle reading mode (wide panel)">⛶</button>
+  <div id="detail"></div>
+</div>
 
 <script id="okf-data" type="application/json">__DATA__</script>
 <script>
@@ -514,6 +534,49 @@ canvas.addEventListener("wheel", e => {
   view.ty = e.offsetY - (e.offsetY - view.ty) * (k2 / view.k);
   view.k = k2; draw();
 }, {passive: false});
+
+/* ---------- resizable layout ---------- */
+const rootStyle = document.documentElement.style;
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+function setupGutter(el, apply, reset) {
+  el.addEventListener("pointerdown", e => {
+    e.preventDefault(); el.classList.add("active");
+    const move = ev => { apply(ev.clientX); resize(); };
+    const up = () => {
+      el.classList.remove("active");
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  });
+  el.addEventListener("dblclick", () => { reset(); resize(); });
+}
+setupGutter(
+  document.getElementById("gut1"),
+  x => rootStyle.setProperty("--side-w", clamp(x, 0, window.innerWidth * 0.45) + "px"),
+  () => rootStyle.removeProperty("--side-w"),
+);
+setupGutter(
+  document.getElementById("gut2"),
+  x => rootStyle.setProperty("--detail-w", clamp(window.innerWidth - x, 260, window.innerWidth * 0.85) + "px"),
+  () => rootStyle.removeProperty("--detail-w"),
+);
+
+/* reading mode: widen the detail panel to most of the screen, and back */
+let readingMode = false, prevDetailW = null;
+document.getElementById("expand").addEventListener("click", () => {
+  readingMode = !readingMode;
+  if (readingMode) {
+    prevDetailW = rootStyle.getPropertyValue("--detail-w") || null;
+    rootStyle.setProperty("--detail-w", Math.round(window.innerWidth * 0.62) + "px");
+  } else if (prevDetailW) {
+    rootStyle.setProperty("--detail-w", prevDetailW);
+  } else {
+    rootStyle.removeProperty("--detail-w");
+  }
+  resize();
+});
 
 /* ---------- boot ---------- */
 resize();
