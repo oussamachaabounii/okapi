@@ -153,5 +153,14 @@ def visualize(bundle_dir: Path, output_file: Path | None, open_browser: bool) ->
         webbrowser.open(out.resolve().as_uri())
 
 
+@main.command()
+@click.option("--check", "check_only", is_flag=True, help="Only check for a newer release; don't install.")
+def update(check_only: bool) -> None:
+    """Update okapi to the latest released version."""
+    from .update import run_update
+
+    sys.exit(run_update(check_only=check_only, console=console))
+
+
 if __name__ == "__main__":
     main()

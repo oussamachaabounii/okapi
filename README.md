@@ -35,7 +35,10 @@ Then from any folder:
 okapi --version
 ```
 
-**Upgrade:** re-run the installer (it always fetches the latest release).
+**Upgrade:** just run `okapi update` — it detects how okapi was installed
+(standalone binary, pipx, or pip), fetches the latest release from GitHub,
+and updates itself in place. `okapi update --check` only reports whether a
+newer version exists (exit code 3 when one does, handy for scripts).
 
 ### Python install (alternative)
 
