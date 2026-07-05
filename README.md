@@ -45,7 +45,7 @@ even Claude Code is needed, only a login or API key):
 
 ```sh
 pipx install git+https://github.com/oussamachaabounii/okapi          # latest
-pipx install git+https://github.com/oussamachaabounii/okapi@v0.3.0   # pinned
+pipx install git+https://github.com/oussamachaabounii/okapi@v0.4.0   # pinned
 ```
 
 **For development** (from a clone): `pip install -e ".[dev]"`.
@@ -87,6 +87,9 @@ okapi analyze ~/code/my-service --model claude-sonnet-4-6
 
 # Check an existing (possibly hand-edited) bundle
 okapi validate ~/code/my-service/okf-knowledge
+
+# Explore a bundle visually — interactive knowledge graph in your browser
+okapi visualize ~/code/my-service/okf-knowledge --open
 ```
 
 Options for `analyze`: `-o/--output` (default `<repo_root>/okf-knowledge` — must
@@ -104,7 +107,7 @@ failed OKF validation (offending files are listed; nothing is deleted).
 okf-knowledge/
 ├── index.md            # entry point: linked sections, no frontmatter
 ├── log.md              # dated changelog, no frontmatter
-├── overview.md         # type: system
+├── overview.md         # type: System
 ├── entrypoints/
 │   ├── index.md
 │   └── cli.md
@@ -126,6 +129,24 @@ scannable sections that prefer markdown tables for anything enumerable
 links in the prose. After each run, `okapi analyze` automatically validates
 the bundle and prints a pass/fail summary.
 
+## Visualize
+
+`okapi visualize BUNDLE_DIR` renders the whole wiki as **one self-contained
+HTML file** (`okf-viewer.html`, no network access needed — ship it with the
+bundle):
+
+- an interactive **force-directed knowledge graph** — nodes are concepts,
+  colored by type and sized by connectedness; edges are the markdown links
+  between them; drag, pan, zoom, click to inspect
+- a **searchable sidebar** grouped by concept type, with per-type show/hide
+- a **detail panel** rendering each concept's markdown (tables, code blocks)
+  plus its metadata, tags, and "links to / linked from" lists — every
+  cross-link navigates in-app
+- the bundle's root `index.md` as the landing page
+
+Use `-o out.html` to control the output path and `--open` to launch your
+browser.
+
 ## Extending
 
 - **New concept types** — add an entry to `CONCEPT_TYPES` in
@@ -142,7 +163,7 @@ the bundle and prints a pass/fail summary.
 - **Single-pass only** — every run regenerates the bundle from scratch; there
   is no incremental `--update` yet (the prompt builder already accepts an
   `existing_bundle` argument to support it later).
-- No visualizer (`okapi visualize`) or MCP server mode yet.
+- No MCP server mode yet.
 - The validator checks structure and frontmatter, not whether the prose is
   accurate — skim the bundle after a run.
 
