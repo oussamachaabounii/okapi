@@ -47,11 +47,28 @@ def test_resolve_paths_rejects_output_outside_root(tmp_path):
         resolve_paths(repo, tmp_path / "elsewhere")
 
 
-def test_resolve_paths_defaults_output_to_repo_root(tmp_path):
-    repo = tmp_path / "repo"
+def test_resolve_paths_defaults_output_inside_target_named_after_it(tmp_path):
+    repo = tmp_path / "maqam"
+    (repo / ".git").mkdir(parents=True)
+    cwd, target, out = resolve_paths(repo, None)
+    assert cwd == repo.resolve()
+    assert out == repo.resolve() / "maqam-okf"
+
+
+def test_resolve_paths_nested_target_keeps_bundle_in_that_folder(tmp_path):
+    repo = tmp_path / "maqam"
     (repo / ".git").mkdir(parents=True)
     nested = repo / "src" / "pkg"
     nested.mkdir(parents=True)
     cwd, target, out = resolve_paths(nested, None)
     assert cwd == repo.resolve()
-    assert out == repo.resolve() / "okf-knowledge"
+    assert out == nested.resolve() / "pkg-okf"
+
+
+def test_resolve_paths_file_target_uses_parent_dir(tmp_path):
+    repo = tmp_path / "maqam"
+    (repo / ".git").mkdir(parents=True)
+    module = repo / "app.py"
+    module.write_text("print('hi')\n")
+    cwd, target, out = resolve_paths(module, None)
+    assert out == repo.resolve() / "maqam-okf"

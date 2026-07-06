@@ -80,6 +80,14 @@ def find_repo_root(start: Path) -> Path:
     return base
 
 
+def default_bundle_dir(target: Path) -> Path:
+    """Default bundle location: `<name>-okf` inside the analyzed directory
+    (or the file's directory when the target is a file), named after it —
+    e.g. analyzing `maqam/` yields `maqam/maqam-okf`."""
+    base = target if target.is_dir() else target.parent
+    return base / f"{base.name}-okf"
+
+
 def resolve_paths(target: Path, output_dir: Path | None) -> tuple[Path, Path, Path]:
     """Resolve (cwd, target, output_dir) for the SDK call.
 
@@ -91,7 +99,7 @@ def resolve_paths(target: Path, output_dir: Path | None) -> tuple[Path, Path, Pa
     cwd = find_repo_root(target)
 
     if output_dir is None:
-        output_dir = cwd / "okf-knowledge"
+        output_dir = default_bundle_dir(target)
     output_dir = output_dir.resolve()
 
     if not output_dir.is_relative_to(cwd):
@@ -99,7 +107,7 @@ def resolve_paths(target: Path, output_dir: Path | None) -> tuple[Path, Path, Pa
             f"output directory {output_dir} is outside the analysis root {cwd}; "
             "the agent's file tools are sandboxed to the target repo, so the "
             "bundle must be written inside it (or omit -o to use the default "
-            f"{cwd / 'okf-knowledge'})"
+            f"{default_bundle_dir(target)})"
         )
     return cwd, target, output_dir
 

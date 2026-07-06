@@ -17,6 +17,7 @@ from . import __version__
 from .agent import (
     DEFAULT_MODEL,
     MODEL_ALIASES,
+    default_bundle_dir,
     detect_auth,
     resolve_paths,
     run_analysis,
@@ -49,7 +50,7 @@ def main() -> None:
 @click.argument("target", type=click.Path(exists=True, path_type=Path), default=".")
 @click.option(
     "-o", "--output", "output_dir", type=click.Path(path_type=Path), default=None,
-    help="Bundle directory [default: <repo_root>/okf-knowledge].",
+    help="Bundle directory [default: <target>/<target-name>-okf].",
 )
 @click.option(
     "--depth", type=click.Choice(sorted(DEPTH_PRESETS)), default="standard",
@@ -124,14 +125,35 @@ def analyze(
     )
 
 
+def _default_bundle_dir() -> Path:
+    """Bundle dir to use when none is given: `<cwd-name>-okf` in the current
+    directory, falling back to the legacy `okf-knowledge` name if only that
+    exists. Exits with a hint when neither is found."""
+    cwd = Path.cwd()
+    preferred = cwd / default_bundle_dir(cwd).name
+    if preferred.is_dir():
+        return preferred
+    legacy = cwd / "okf-knowledge"
+    if legacy.is_dir():
+        return legacy
+    console.print(
+        f"[red]error:[/] no bundle found here (looked for ./{preferred.name} "
+        "and ./okf-knowledge); pass the bundle directory explicitly"
+    )
+    sys.exit(1)
+
+
 @main.command()
 @click.argument(
     "bundle_dir",
     type=click.Path(exists=True, file_okay=False, path_type=Path),
-    default="okf-knowledge",
+    default=None,
+    required=False,
 )
-def validate(bundle_dir: Path) -> None:
-    """Check an OKF bundle for conformance [default: ./okf-knowledge]."""
+def validate(bundle_dir: Path | None) -> None:
+    """Check an OKF bundle for conformance [default: ./<cwd-name>-okf]."""
+    if bundle_dir is None:
+        bundle_dir = _default_bundle_dir()
     report = validate_bundle(bundle_dir)
     _render_report(report, bundle_dir)
     if not report.ok:
@@ -142,17 +164,21 @@ def validate(bundle_dir: Path) -> None:
 @click.argument(
     "bundle_dir",
     type=click.Path(exists=True, file_okay=False, path_type=Path),
-    default="okf-knowledge",
+    default=None,
+    required=False,
 )
 @click.option(
     "-o", "--output", "output_file", type=click.Path(path_type=Path), default=None,
     help="Where to write the HTML [default: <bundle>/okf-viewer.html].",
 )
 @click.option("--open", "open_browser", is_flag=True, help="Open the page in your browser.")
-def visualize(bundle_dir: Path, output_file: Path | None, open_browser: bool) -> None:
+def visualize(bundle_dir: Path | None, output_file: Path | None, open_browser: bool) -> None:
     """Render an OKF bundle as an interactive knowledge-graph HTML page
-    [default: ./okf-knowledge]."""
+    [default: ./<cwd-name>-okf]."""
     from .visualizer import build_visualization
+
+    if bundle_dir is None:
+        bundle_dir = _default_bundle_dir()
 
     try:
         out = build_visualization(bundle_dir, output_file)
