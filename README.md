@@ -6,6 +6,12 @@ to reverse-engineer the code — reading it, tracing entry points, services,
 data models, and workflows — and writes what it learns as a folder of markdown
 files conforming to Google's [Open Knowledge Format (OKF v0.1)](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md).
 
+Every bundle covers the system through two lenses: **technical** knowledge
+(modules, entry points, data models, workflows — how the code works) and
+**functional** knowledge (features, user journeys, business rules, a domain
+glossary — what the product does for its users, written in product language
+for non-engineers too).
+
 ## Install
 
 ### Standalone binary — no Python required (recommended)
@@ -72,13 +78,13 @@ and fails fast with setup guidance if it finds neither.
 ## Usage
 
 ```sh
-# From inside a repo: analyze it — writes ./okf-knowledge/
+# From inside a repo: analyze it — writes ./my-service-okf/
 cd ~/code/my-service && okapi analyze
 
 # Or point it at a path explicitly
 okapi analyze ~/code/my-service
 
-# A single file (the bundle still lands at the repo root)
+# A single file (the bundle lands next to it: src/src-okf/)
 okapi analyze ~/code/my-service/src/billing.py
 
 # Narrow the scope
@@ -91,7 +97,7 @@ okapi analyze ~/code/my-service --depth deep
 okapi analyze ~/code/my-service --model opus
 okapi analyze ~/code/my-service --model claude-sonnet-4-6
 
-# Check a bundle (defaults to ./okf-knowledge)
+# Check a bundle (defaults to ./<cwd-name>-okf, or legacy ./okf-knowledge)
 okapi validate
 
 # Explore it visually — interactive knowledge graph in your browser
@@ -101,8 +107,9 @@ okapi visualize --open
 okapi update
 ```
 
-Options for `analyze`: `-o/--output` (default `<repo_root>/okf-knowledge` — must
-be inside the target repo, the agent's file tools are sandboxed to it),
+Options for `analyze`: `-o/--output` (default `<target>/<target-name>-okf`,
+e.g. analyzing `maqam/` writes `maqam/maqam-okf/` — must be inside the target
+repo, the agent's file tools are sandboxed to it),
 `--include-tests/--no-include-tests` (default off), `--model` (default
 `sonnet` → `claude-sonnet-5`; aliases: `sonnet`, `opus`, `haiku`; anything
 else is passed to the SDK as-is).
@@ -113,7 +120,7 @@ failed OKF validation (offending files are listed; nothing is deleted).
 ## What the output looks like
 
 ```
-okf-knowledge/
+<project>-okf/
 ├── index.md            # entry point: linked sections, no frontmatter
 ├── log.md              # dated changelog, no frontmatter
 ├── overview.md         # type: System
@@ -123,9 +130,15 @@ okf-knowledge/
 ├── services/
 │   ├── index.md
 │   └── billing.md
-└── workflows/
+├── workflows/
+│   ├── index.md
+│   └── invoice-lifecycle.md
+└── functional/
     ├── index.md
-    └── invoice-lifecycle.md
+    ├── features/invoicing.md
+    ├── journeys/pay-an-invoice.md
+    ├── rules/one-retry-per-payment.md
+    └── glossary/dunning.md
 ```
 
 Every concept file has YAML frontmatter in the style of [Google's OKF

@@ -283,6 +283,9 @@ const TYPE_COLORS = {
   "entry point": "#6cc5b0", "workflow": "#3ca951", "data model": "#ff8ab7",
   "interface": "#a463f2", "dependency": "#97bbf5", "convention": "#9c6b4e",
   "decision": "#9498a0",
+  /* functional types — CVD-checked against their nearest neighbors above */
+  "feature": "#d4436f", "user journey": "#0d89a8",
+  "business rule": "#7c871e", "domain term": "#177b66",
 };
 const FALLBACK = ["#4269d0","#efb118","#ff725c","#6cc5b0","#3ca951","#ff8ab7","#a463f2","#97bbf5","#9c6b4e","#9498a0"];
 const typeColor = (() => {

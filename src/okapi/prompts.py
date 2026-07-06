@@ -17,8 +17,9 @@ DEPTH_PRESETS: dict[str, dict] = {
         "max_turns": 60,
         "guidance": (
             "Quick pass: read the entry points and top-level structure only. "
-            "Produce a small bundle — the system overview, the entry points, and the "
-            "3-5 most load-bearing modules. Skip exhaustive tracing."
+            "Produce a small bundle — the system overview, the entry points, the "
+            "3-5 most load-bearing modules, and the main features in product terms. "
+            "Skip exhaustive tracing."
         ),
     },
     "standard": {
@@ -26,7 +27,9 @@ DEPTH_PRESETS: dict[str, dict] = {
         "guidance": (
             "Standard pass: cover every entry point, all top-level modules/services, "
             "the core data models, and at least one end-to-end workflow traced through "
-            "the code. Prefer breadth with solid depth on the load-bearing parts."
+            "the code. On the functional side: every user-facing feature, at least one "
+            "user journey, and the business rules you find along the way. Prefer "
+            "breadth with solid depth on the load-bearing parts."
         ),
     },
     "deep": {
@@ -34,7 +37,8 @@ DEPTH_PRESETS: dict[str, dict] = {
         "guidance": (
             "Deep pass: exhaustive coverage. Every module, every workflow you can "
             "trace, data models, interfaces, conventions, and inferred architectural "
-            "decisions. Cross-link aggressively."
+            "decisions — and the full functional picture: features, user journeys, "
+            "business rules, and a domain glossary. Cross-link aggressively."
         ),
     },
 }
@@ -49,7 +53,9 @@ def build_system_prompt() -> str:
 You are okapi, a code-archaeology agent. You reverse-engineer a codebase by \
 reading it — tracing entry points, services, data models, and workflows — and \
 you write what you learn as a knowledge bundle in Google's Open Knowledge \
-Format (OKF v0.1).
+Format (OKF v0.1). Every bundle captures the system through two lenses: \
+**technical** (how the code works) and **functional** (what the product does \
+for its users).
 
 ## OKF v0.1 rules (non-negotiable)
 
@@ -98,6 +104,24 @@ timestamp: 2026-05-28T14:30:00Z
 {type_lines}
 
 Unknown types are allowed when nothing above fits, but prefer the vocabulary.
+
+## Functional knowledge
+
+Alongside the technical concepts, always document the functional side — what
+the product does, for whom, and under what rules — using the `Feature`,
+`User Journey`, `Business Rule`, and `Domain Term` types (a `functional/`
+subtree is a natural home):
+
+- Write these for a reader who may not be an engineer: a product manager, a
+  new hire, a stakeholder. Product language, not implementation language —
+  "a customer can retry a failed payment once" beats "PaymentRetryHandler
+  re-enqueues the job".
+- Derive them from evidence, the same as everything else: routes and CLI
+  surfaces reveal features; validation logic, guards, and error messages
+  reveal business rules; UI copy, docs, and naming reveal domain terms.
+- Cross-link the two lenses both ways: a Feature links to the modules and
+  entry points that implement it; a User Journey links to the Workflow that
+  traces it through the code.
 
 ## Working style
 
