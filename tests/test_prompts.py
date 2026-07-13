@@ -29,3 +29,33 @@ def test_task_prompt_states_target_and_output():
     prompt = build_task_prompt("src/billing/", "billing-okf")
     assert "src/billing/" in prompt
     assert "billing-okf/" in prompt
+
+
+PAPER_TYPES = ("Paper", "Method", "Experiment", "Contribution", "Finding", "Limitation")
+
+
+def test_paper_types_are_in_the_paper_vocabulary():
+    for t in PAPER_TYPES:
+        assert t in okf_schema.PAPER_CONCEPT_TYPES
+    assert "Domain Term" in okf_schema.PAPER_CONCEPT_TYPES
+
+
+def test_paper_system_prompt_covers_both_lenses():
+    prompt = build_system_prompt("paper")
+    assert "technical" in prompt and "plain-language" in prompt
+    for t in PAPER_TYPES:
+        assert t in prompt
+    # Paper-specific reading rules, and none of the code-archaeology framing.
+    assert "page ranges" in prompt
+    assert "code-archaeology" not in prompt
+
+
+def test_every_depth_has_paper_guidance():
+    for name, preset in DEPTH_PRESETS.items():
+        assert preset["paper_guidance"].strip(), f"depth {name!r} lacks paper guidance"
+
+
+def test_paper_task_prompt_omits_test_suite_instructions():
+    prompt = build_task_prompt("attention.pdf", "attention-okf", kind="paper")
+    assert "scientific paper" in prompt
+    assert "test" not in prompt.lower()

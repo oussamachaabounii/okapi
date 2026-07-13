@@ -62,7 +62,13 @@ def main() -> None:
 )
 @click.option(
     "--include-tests/--no-include-tests", default=False, show_default=True,
-    help="Whether to document the test suite as well.",
+    help="Whether to document the test suite as well (code targets only).",
+)
+@click.option(
+    "--kind", type=click.Choice(["auto", "code", "paper"]), default="auto",
+    show_default=True,
+    help="What the target is. auto: .pdf/.tex files are papers, everything "
+    "else is code — pass 'paper' explicitly for e.g. a markdown paper.",
 )
 @click.option(
     "--model", default=DEFAULT_MODEL, show_default=True,
@@ -76,12 +82,15 @@ def analyze(
     depth: str,
     focus: str | None,
     include_tests: bool,
+    kind: str,
     model: str,
 ) -> None:
-    """Analyze TARGET (repo, directory, or file) and write an OKF bundle.
+    """Analyze TARGET (repo, directory, file, or scientific paper) and write
+    an OKF bundle.
 
     TARGET defaults to the current directory — `okapi analyze` run inside
-    a repo documents that repo.
+    a repo documents that repo. A .pdf or .tex TARGET is analyzed as a
+    scientific paper.
     """
     try:
         auth = detect_auth()
@@ -104,6 +113,7 @@ def analyze(
                 depth=depth,
                 focus=focus,
                 include_tests=include_tests,
+                kind=kind,
                 model=model,
                 console=console,
             )

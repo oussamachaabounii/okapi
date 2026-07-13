@@ -2,7 +2,13 @@ from pathlib import Path
 
 import pytest
 
-from okapi.agent import MODEL_ALIASES, detect_auth, resolve_model, resolve_paths
+from okapi.agent import (
+    MODEL_ALIASES,
+    detect_auth,
+    detect_kind,
+    resolve_model,
+    resolve_paths,
+)
 
 
 def test_aliases_resolve_to_full_ids():
@@ -65,10 +71,25 @@ def test_resolve_paths_nested_target_keeps_bundle_in_that_folder(tmp_path):
     assert out == nested.resolve() / "pkg-okf"
 
 
-def test_resolve_paths_file_target_uses_parent_dir(tmp_path):
+def test_resolve_paths_file_target_uses_file_stem(tmp_path):
     repo = tmp_path / "maqam"
     (repo / ".git").mkdir(parents=True)
     module = repo / "app.py"
     module.write_text("print('hi')\n")
     cwd, target, out = resolve_paths(module, None)
-    assert out == repo.resolve() / "maqam-okf"
+    assert out == repo.resolve() / "app-okf"
+
+
+def test_detect_kind_paper_suffixes(tmp_path):
+    for name in ("attention.pdf", "main.tex", "PAPER.PDF"):
+        f = tmp_path / name
+        f.write_text("x")
+        assert detect_kind(f) == "paper", name
+
+
+def test_detect_kind_everything_else_is_code(tmp_path):
+    (tmp_path / "app.py").write_text("x")
+    (tmp_path / "notes.md").write_text("x")
+    assert detect_kind(tmp_path) == "code"
+    assert detect_kind(tmp_path / "app.py") == "code"
+    assert detect_kind(tmp_path / "notes.md") == "code"  # needs --kind paper

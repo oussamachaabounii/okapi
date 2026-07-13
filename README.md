@@ -12,6 +12,11 @@ Every bundle covers the system through two lenses: **technical** knowledge
 glossary — what the product does for its users, written in product language
 for non-engineers too).
 
+It works on **scientific papers** too: point it at a `.pdf` or `.tex` file
+and the same two lenses become methods, experiments, datasets, and results
+on the technical side, and contributions, findings, limitations, and a
+glossary in plain language on the other.
+
 ## Install
 
 ### Standalone binary — no Python required (recommended)
@@ -89,6 +94,10 @@ okapi analyze ~/code/my-service/src/billing.py
 
 # Narrow the scope
 okapi analyze ~/code/my-service --focus "the payment flow"
+
+# A scientific paper (.pdf/.tex auto-detect; bundle lands at attention-okf/)
+okapi analyze ~/papers/attention.pdf
+okapi analyze ~/papers/survey.md --kind paper   # .md needs the explicit flag
 
 # Exhaustive pass (quick | standard | deep)
 okapi analyze ~/code/my-service --depth deep

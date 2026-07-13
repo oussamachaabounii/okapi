@@ -286,6 +286,11 @@ const TYPE_COLORS = {
   /* functional types — CVD-checked against their nearest neighbors above */
   "feature": "#d4436f", "user journey": "#0d89a8",
   "business rule": "#7c871e", "domain term": "#177b66",
+  /* paper types — reuse the validated color of each structural analog
+     (a bundle is one kind at a time, so the sets never mix on screen) */
+  "paper": "#4269d0", "method": "#ff725c", "experiment": "#3ca951",
+  "dataset": "#ff8ab7", "result": "#efb118", "related work": "#97bbf5",
+  "contribution": "#d4436f", "finding": "#0d89a8", "limitation": "#9498a0",
 };
 const FALLBACK = ["#4269d0","#efb118","#ff725c","#6cc5b0","#3ca951","#ff8ab7","#a463f2","#97bbf5","#9c6b4e","#9498a0"];
 const typeColor = (() => {

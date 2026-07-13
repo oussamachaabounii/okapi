@@ -28,6 +28,23 @@ CONCEPT_TYPES: dict[str, str] = {
     "Domain Term": "A glossary entry: a domain word or concept the code embodies, defined in plain language.",
 }
 
+# Concept type vocabulary for scientific papers (`okapi analyze paper.pdf`),
+# mirroring the two-lens split above: how the work was done vs what it means.
+PAPER_CONCEPT_TYPES: dict[str, str] = {
+    # Technical: how the work was done.
+    "Paper": "The whole paper at a glance: question, approach, headline results (analog of System).",
+    "Method": "A technique, algorithm, or model the paper proposes or relies on.",
+    "Experiment": "An experimental setup: what was run, on what, measured how.",
+    "Dataset": "Data the paper uses or introduces: source, size, structure.",
+    "Result": "A reported result, quantitative or qualitative, exactly as stated.",
+    "Related Work": "How the paper positions itself against prior art.",
+    # Plain-language: what the work means, for readers outside the field.
+    "Contribution": "What the authors claim is new, in one plain sentence each.",
+    "Finding": "A takeaway in plain language: what was learned and how solid it is.",
+    "Limitation": "A stated or evident limitation, and what it means for the claims.",
+    "Domain Term": CONCEPT_TYPES["Domain Term"],
+}
+
 # Filenames reserved by OKF at any directory level — never valid concept names.
 # index.md: linked sections for progressive disclosure, no frontmatter.
 # log.md: dated changelog, no frontmatter.
@@ -59,4 +76,23 @@ BUNDLE_LAYOUT_HINT = """\
 │   └── index.md
 └── functional/         # product-level knowledge: features, journeys, rules, glossary
     └── index.md
+"""
+
+# Starting shape for paper bundles — same caveat: a hint, not a requirement.
+PAPER_BUNDLE_LAYOUT_HINT = """\
+<paper>-okf/
+├── index.md            # bundle entry point: linked sections, no frontmatter
+├── log.md              # dated changelog, no frontmatter
+├── overview.md         # type: Paper — the whole-paper concept
+├── contributions/      # one concept per claimed contribution
+│   └── index.md
+├── methods/
+│   └── index.md
+├── experiments/        # setups, datasets, and results
+│   └── index.md
+├── findings/           # plain-language takeaways and limitations
+│   └── index.md
+├── glossary/           # Domain Term concepts
+│   └── index.md
+└── related-work.md     # type: Related Work
 """

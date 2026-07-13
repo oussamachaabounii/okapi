@@ -80,12 +80,26 @@ def find_repo_root(start: Path) -> Path:
     return base
 
 
+# File suffixes that flip `--kind auto` to the paper prompts.
+PAPER_SUFFIXES = {".pdf", ".tex"}
+
+
+def detect_kind(target: Path) -> str:
+    """What kind of analysis fits the target: "paper" for a PDF/LaTeX file,
+    "code" for everything else (.md papers need an explicit --kind paper)."""
+    if target.is_file() and target.suffix.lower() in PAPER_SUFFIXES:
+        return "paper"
+    return "code"
+
+
 def default_bundle_dir(target: Path) -> Path:
-    """Default bundle location: `<name>-okf` inside the analyzed directory
-    (or the file's directory when the target is a file), named after it —
-    e.g. analyzing `maqam/` yields `maqam/maqam-okf`."""
-    base = target if target.is_dir() else target.parent
-    return base / f"{base.name}-okf"
+    """Default bundle location: `<name>-okf` next to what was analyzed —
+    inside a directory target and named after it (`maqam/` → `maqam/maqam-okf`),
+    or beside a file target and named after its stem (`attention.pdf` →
+    `attention-okf`)."""
+    if target.is_dir():
+        return target / f"{target.name}-okf"
+    return target.parent / f"{target.stem}-okf"
 
 
 def resolve_paths(target: Path, output_dir: Path | None) -> tuple[Path, Path, Path]:
@@ -128,17 +142,21 @@ async def run_analysis(
     depth: str = "standard",
     focus: str | None = None,
     include_tests: bool = False,
+    kind: str = "auto",
     model: str = DEFAULT_MODEL,
     console: Console | None = None,
 ) -> AnalysisResult:
     """Run one analysis pass over `target`, writing the bundle to `output_dir`.
 
     `target` and `output_dir` should come from resolve_paths() so the sandbox
-    invariant (output under the repo root) already holds.
+    invariant (output under the repo root) already holds. `kind` is "code",
+    "paper", or "auto" (detect from the target's file type).
     """
     console = console or Console()
     model = resolve_model(model)
     cwd, target, output_dir = resolve_paths(target, output_dir)
+    if kind == "auto":
+        kind = detect_kind(target)
 
     target_desc = "." if target == cwd else str(target.relative_to(cwd))
     output_desc = str(output_dir.relative_to(cwd))
@@ -147,7 +165,7 @@ async def run_analysis(
         cwd=str(cwd),
         allowed_tools=ALLOWED_TOOLS,
         permission_mode="acceptEdits",
-        system_prompt=prompts.build_system_prompt(),
+        system_prompt=prompts.build_system_prompt(kind),
         model=model,
         max_turns=prompts.DEPTH_PRESETS[depth]["max_turns"],
     )
@@ -157,9 +175,10 @@ async def run_analysis(
         depth=depth,
         focus=focus,
         include_tests=include_tests,
+        kind=kind,
     )
 
-    console.print(f"[bold]okapi[/] analyzing [green]{target}[/]")
+    console.print(f"[bold]okapi[/] analyzing [green]{target}[/] [dim]({kind})[/]")
     console.print(f"  root: {cwd}   depth: {depth}   model: {model}")
     console.print(f"  bundle: {output_dir}\n")
 

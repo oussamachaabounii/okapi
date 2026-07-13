@@ -65,6 +65,18 @@ def test_type_vocabulary_check_is_case_insensitive(tmp_path):
     assert not any("vocabulary" in w for w in report.warnings)
 
 
+def test_paper_types_are_known_vocabulary(tmp_path):
+    bundle = tmp_path / "bundle"
+    bundle.mkdir()
+    (bundle / "index.md").write_text("# ok\n")
+    (bundle / "headline.md").write_text(
+        "---\ntype: Finding\ntitle: t\ndescription: d\ntags: [x]\n"
+        "resource: paper.pdf\ntimestamp: 2026-07-06T00:00:00Z\n---\n\n# t\n"
+    )
+    report = validate_bundle(bundle)
+    assert not any("vocabulary" in w for w in report.warnings)
+
+
 def test_unterminated_frontmatter_is_an_error(tmp_path):
     bundle = tmp_path / "bundle"
     bundle.mkdir()

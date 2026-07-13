@@ -21,6 +21,11 @@ DEPTH_PRESETS: dict[str, dict] = {
             "3-5 most load-bearing modules, and the main features in product terms. "
             "Skip exhaustive tracing."
         ),
+        "paper_guidance": (
+            "Quick pass: read the abstract, introduction, and conclusion only. "
+            "Produce a small bundle — the paper overview, the claimed contributions, "
+            "and the headline findings in plain language. Skip the experimental detail."
+        ),
     },
     "standard": {
         "max_turns": 150,
@@ -31,6 +36,12 @@ DEPTH_PRESETS: dict[str, dict] = {
             "user journey, and the business rules you find along the way. Prefer "
             "breadth with solid depth on the load-bearing parts."
         ),
+        "paper_guidance": (
+            "Standard pass: cover every claimed contribution, each method the paper "
+            "proposes, the main experiments with their datasets and reported results, "
+            "the plain-language findings and limitations, and a glossary of the domain "
+            "terms a newcomer would need."
+        ),
     },
     "deep": {
         "max_turns": 400,
@@ -40,12 +51,28 @@ DEPTH_PRESETS: dict[str, dict] = {
             "decisions — and the full functional picture: features, user journeys, "
             "business rules, and a domain glossary. Cross-link aggressively."
         ),
+        "paper_guidance": (
+            "Deep pass: exhaustive coverage. Every method, every experiment with its "
+            "full setup and every reported result, all datasets, a map of the related "
+            "work the paper positions against, and the complete plain-language picture: "
+            "contributions, findings, limitations, glossary. Cross-link aggressively."
+        ),
     },
 }
 
 
-def build_system_prompt() -> str:
-    """System prompt: who the agent is and the OKF rules its output must obey."""
+def build_system_prompt(kind: str = "code") -> str:
+    """System prompt: who the agent is and the OKF rules its output must obey.
+
+    kind: "code" (the default code-archaeology prompt) or "paper" (scientific
+    papers — same OKF rules, a paper vocabulary and reading style).
+    """
+    if kind == "paper":
+        return _paper_system_prompt()
+    return _code_system_prompt()
+
+
+def _code_system_prompt() -> str:
     type_lines = "\n".join(f"- `{name}`: {desc}" for name, desc in okf_schema.CONCEPT_TYPES.items())
     recommended = ", ".join(f"`{f}`" for f in okf_schema.RECOMMENDED_FIELDS)
 
@@ -151,6 +178,99 @@ Joined with [customers](customers.md) on `customer_id`.
 """
 
 
+def _paper_system_prompt() -> str:
+    type_lines = "\n".join(
+        f"- `{name}`: {desc}" for name, desc in okf_schema.PAPER_CONCEPT_TYPES.items()
+    )
+    recommended = ", ".join(f"`{f}`" for f in okf_schema.RECOMMENDED_FIELDS)
+
+    return f"""\
+You are okapi, a paper-archaeology agent. You reverse-engineer a scientific \
+paper by reading it — its contributions, methods, experiments, and results — \
+and you write what you learn as a knowledge bundle in Google's Open Knowledge \
+Format (OKF v0.1). Every bundle captures the paper through two lenses: \
+**technical** (how the work was done, for researchers) and **plain-language** \
+(what it means, for everyone else).
+
+## OKF v0.1 rules (non-negotiable)
+
+- A bundle is a directory tree. Each **concept** is one markdown file; the
+  file path is the concept's identity.
+- Every concept file starts with a YAML frontmatter block delimited by `---` lines.
+  The only *required* field is `type` — a short human-readable Title Case
+  category (like "Method" or "Finding"). Always also emit {recommended}.
+  Example:
+
+```yaml
+---
+type: Result
+title: BLEU on WMT14 En-De
+description: The proposed model reaches 28.4 BLEU, beating the best prior single model by over 2 points.
+resource: attention.pdf
+tags: [translation, benchmark]
+timestamp: 2026-05-28T14:30:00Z
+---
+```
+
+  - `title`: short human name
+  - `description`: one-sentence summary
+  - `resource`: the paper file this concept documents (cite sections/pages in the body)
+  - `tags`: list of lowercase keywords
+  - `timestamp`: now, as an ISO 8601 datetime (e.g. 2026-05-28T14:30:00Z)
+- A concept's id is its file path minus `.md` (e.g. `methods/self-attention.md` →
+  `methods/self-attention`). Use short kebab-case filenames.
+- `index.md` and `log.md` are **reserved** at every directory level — never use them
+  as concept names and never give them frontmatter.
+  - `index.md`: no frontmatter; a short intro plus markdown links to the concepts
+    (and subdirectory indexes) below it, so a reader can drill in progressively.
+  - `log.md`: no frontmatter; a dated changelog of what was written and when.
+- Relationships are plain markdown links inside concept body prose
+  (e.g. `see [the ablation study](../experiments/ablations.md)`) — not a
+  frontmatter field. Links to concepts you haven't written yet are valid;
+  prefer linking over repeating yourself.
+- There is no fixed directory taxonomy. Shape the tree to fit the paper. A
+  reasonable starting shape:
+
+```
+{okf_schema.PAPER_BUNDLE_LAYOUT_HINT}```
+
+## Concept types
+
+{type_lines}
+
+Unknown types are allowed when nothing above fits, but prefer the vocabulary.
+
+## Plain-language knowledge
+
+Alongside the technical concepts, always document what the paper *means* —
+using the `Contribution`, `Finding`, `Limitation`, and `Domain Term` types:
+
+- Write these for a reader who is not in the field: a practitioner, a student,
+  a decision-maker. Say what was learned and how much to trust it, without
+  jargon — define any term you can't avoid as a `Domain Term`.
+- Keep the lenses linked both ways: a Finding links to the Results and
+  Experiments that support it; a Contribution links to the Methods that
+  realize it.
+
+## Working style
+
+- Read before you write. PDFs must be read in page ranges (e.g. pages 1-10,
+  then 11-20) — start with the abstract, introduction, and conclusion to map
+  the paper, then read methods and experiments to fill in.
+- Ground every claim in the paper's text. Copy reported numbers, metrics, and
+  citations exactly as printed — never estimate, round, or invent them. If the
+  paper doesn't say it, don't write it.
+- Cite where things come from: `resource` is the paper file; name the section
+  (and page when you know it) in body prose, e.g. "Section 4.2 reports…".
+- Structure bodies as scannable `#` sections, and prefer **markdown tables**
+  for anything enumerable — results, hyperparameters, dataset statistics,
+  baselines — with links where a row relates to another concept.
+- Write concept files as you finish understanding each part — don't hold
+  everything for the end. Finish by writing `index.md` files for every
+  directory and the root `log.md`.
+"""
+
+
 def build_task_prompt(
     target_desc: str,
     output_dir: str,
@@ -158,39 +278,44 @@ def build_task_prompt(
     depth: str = "standard",
     focus: str | None = None,
     include_tests: bool = False,
+    kind: str = "code",
     existing_bundle: str | None = None,
 ) -> str:
     """Task prompt for one analysis run.
 
     target_desc: what to analyze, relative to the agent's cwd (e.g. "." or "src/billing/").
     output_dir: where to write the bundle, relative to the agent's cwd.
+    kind: "code" or "paper" — picks the depth guidance; include_tests only
+        applies to code.
     existing_bundle: reserved for a future --update flag — when set, the agent is
         told to update the bundle at that path instead of regenerating it.
     """
     preset = DEPTH_PRESETS[depth]
+    what = "the scientific paper" if kind == "paper" else "the code"
     parts = [
-        f"Analyze the code at `{target_desc}` and write an OKF v0.1 knowledge "
+        f"Analyze {what} at `{target_desc}` and write an OKF v0.1 knowledge "
         f"bundle to `{output_dir}/`.",
-        preset["guidance"],
+        preset["paper_guidance" if kind == "paper" else "guidance"],
     ]
 
     if focus:
         parts.append(
             f"Focus the analysis on: {focus}. Still write the bundle root "
-            "(index.md, log.md, a system overview), but spend your depth budget "
+            "(index.md, log.md, an overview), but spend your depth budget "
             "on the focus area."
         )
 
-    if include_tests:
-        parts.append(
-            "Include the test suite in the analysis: document what the tests "
-            "cover and what they reveal about intended behavior."
-        )
-    else:
-        parts.append(
-            "Skip test files except where reading one is the fastest way to "
-            "understand production behavior; don't write concepts about tests."
-        )
+    if kind != "paper":
+        if include_tests:
+            parts.append(
+                "Include the test suite in the analysis: document what the tests "
+                "cover and what they reveal about intended behavior."
+            )
+        else:
+            parts.append(
+                "Skip test files except where reading one is the fastest way to "
+                "understand production behavior; don't write concepts about tests."
+            )
 
     if existing_bundle:
         parts.append(
